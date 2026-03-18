@@ -1,10 +1,22 @@
 import express from "express";
+import { connectDb } from "./config/db";
+import { config } from "./config/config";
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json());    
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-})
+const startServer = async () => {
+    try {
+        await connectDb(config.dbEnv)
+        const PORT = config.port || 3000;
+        app.listen(PORT, () => {
+            console.log(`[INFO] Server is running on port ${PORT}`);
+        })
+    } catch (error) {
+        console.error("[ERROR] Server failed to start")
+
+    }
+}
+
+startServer();
