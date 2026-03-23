@@ -1,29 +1,57 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "mysql"
-    url = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
+enum Role {
+  User
+  admin
+}
+
+
 model User {
-  user_id   Int      @id @default(autoincrement())
-  username  String
-  email     String   @unique
-  password  String
+  user_id   Int    @id @default(autoincrement())
+  username  String @unique @db.VarChar(50)
+  email     String @unique @db.VarChar(80)
+  password  String @db.VarChar(100)
+  role      Role   @default(User)
   reviews   Review[]
 }
 
+model Developer {
+  developer_id Int      @id @default(autoincrement())
+  name         String   @db.VarChar(70)
+  country      String   @db.VarChar(30)
+  founded_year Int?     @db.Int
+  website      String?  @db.VarChar(150)
+  description  String?  @db.VarChar(500)
+  games        Game[]
+}
+
+model Publisher {
+  publisher_id Int      @id @default(autoincrement())
+  name         String   @db.VarChar(70)
+  country      String?  @db.VarChar(30)
+  founded_year Int?     @db.Int
+  website      String?  @db.VarChar(150)
+  description  String?  @db.VarChar(300)
+  games        Game[]
+}
+
 model Game {
-  game_id      Int         @id @default(autoincrement())
-  title        String
-  description  String?
-  developer    Developer   @relation(fields: [developer_id], references: [developer_id])
+  game_id      Int          @id @default(autoincrement())
+  title        String       @db.VarChar(30)
+  description  String?      @db.VarChar(300)
   developer_id Int
-  publisher    Publisher   @relation(fields: [publisher_id], references: [publisher_id])
   publisher_id Int
   release_date DateTime?
+
+  developer    Developer   @relation(fields: [developer_id], references: [developer_id])
+  publisher    Publisher   @relation(fields: [publisher_id], references: [publisher_id])
   reviews      Review[]
   genres       Game_Genre[]
   platforms    Game_Platform[]
@@ -31,83 +59,68 @@ model Game {
 }
 
 model Review {
-  review_id  Int      @id @default(autoincrement())
-  user       User     @relation(fields: [user_id], references: [user_id])
-  user_id    Int
-  game       Game     @relation(fields: [game_id], references: [game_id])
-  game_id    Int
-  review_text String
-  rating     Int
-  likes_count Int     @default(0)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  review_id   Int      @id @default(autoincrement())
+  user_id     Int
+  game_id     Int
+  review_text String?  @db.VarChar(500)
+  rating      Int
+  likes_count Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [user_id])
+  game Game @relation(fields: [game_id], references: [game_id])
+
 }
 
 model Genre {
-  genre_id Int        @id @default(autoincrement())
-  name     String
-  description String?
-  games    Game_Genre[]
+  genre_id   Int          @id @default(autoincrement())
+  name       String       @db.VarChar(50)
+  description String?     @db.VarChar(300)
+  games      Game_Genre[]
 }
 
 model Game_Genre {
-  game     Game  @relation(fields: [game_id], references: [game_id])
   game_id  Int
-  genre    Genre @relation(fields: [genre_id], references: [genre_id])
   genre_id Int
+
+  game  Game  @relation(fields: [game_id], references: [game_id])
+  genre Genre @relation(fields: [genre_id], references: [genre_id])
 
   @@id([game_id, genre_id])
 }
 
 model Platform {
-  platform_id Int    @id @default(autoincrement())
-  name        String
-  manufacturer String?
+  platform_id  Int             @id @default(autoincrement())
+  name         String          @db.VarChar(50)
+  manufacturer String?         @db.VarChar(50)
   release_year Int?
-  games       Game_Platform[]
+  games        Game_Platform[]
 }
 
 model Game_Platform {
-  game       Game     @relation(fields: [game_id], references: [game_id])
-  game_id    Int
-  platform   Platform @relation(fields: [platform_id], references: [platform_id])
+  game_id     Int
   platform_id Int
+
+  game     Game     @relation(fields: [game_id], references: [game_id])
+  platform Platform @relation(fields: [platform_id], references: [platform_id])
 
   @@id([game_id, platform_id])
 }
 
-model Developer {
-  developer_id Int     @id @default(autoincrement())
-  name         String
-  country      String?
-  founded_year Int?
-  website      String?
-  description  String?
-  games        Game[]
-}
-
-model Publisher {
-  publisher_id Int     @id @default(autoincrement())
-  name         String
-  country      String?
-  founded_year Int?
-  website      String?
-  description  String?
-  games        Game[]
-}
-
 model Tag {
-  tag_id      Int      @id @default(autoincrement())
-  name        String
-  description String?
+  tag_id      Int       @id @default(autoincrement())
+  name        String    @db.VarChar(50)
+  description String?   @db.VarChar(150)
   games       Game_Tag[]
 }
 
 model Game_Tag {
-  game     Game @relation(fields: [game_id], references: [game_id])
-  game_id  Int
-  tag      Tag  @relation(fields: [tag_id], references: [tag_id])
-  tag_id   Int
+  game_id Int
+  tag_id  Int
+
+  game Game @relation(fields: [game_id], references: [game_id])
+  tag  Tag  @relation(fields: [tag_id], references: [tag_id])
 
   @@id([game_id, tag_id])
 }
